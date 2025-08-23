@@ -196,3 +196,60 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Form submission handling with success message
+document.querySelector(".contact-form").addEventListener("submit", function(e) {
+    e.preventDefault(); // Prevent default form submission initially
+
+    const form = this;
+    const submitButton = form.querySelector(".submit-button");
+    const originalButtonText = submitButton.innerHTML;
+
+    // Basic validation (optional, Getform also validates)
+    const name = form.querySelector("input[name='name']").value;
+    const email = form.querySelector("input[name='email']").value;
+    const message = form.querySelector("textarea[name='message']").value;
+
+    if (!name || !email || !message) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    // Show sending state
+    submitButton.innerHTML = "<span>Sending...</span>";
+    submitButton.disabled = true;
+
+    // Use Fetch API to submit the form data
+    fetch(form.action, {
+        method: form.method,
+        body: new FormData(form),
+        headers: {
+            'Accept': 'application/json' // Request JSON response from Getform
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json(); // Parse JSON response
+        } else {
+            // Handle HTTP errors (e.g., 400, 500)
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || 'Form submission failed');
+            });
+        }
+    })
+    .then(data => {
+        // Success handling
+        alert("Message sent successfully! We will get back to you shortly.");
+        form.reset(); // Clear the form
+    })
+    .catch(error => {
+        // Error handling
+        console.error('Form submission error:', error);
+        alert("There was an error sending your message. Please try again later.");
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+    });
+});
